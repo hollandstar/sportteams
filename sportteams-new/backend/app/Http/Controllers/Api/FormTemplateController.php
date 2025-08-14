@@ -85,10 +85,10 @@ class FormTemplateController extends Controller
     /**
      * Display the specified form template
      */
-    public function show(FormTemplate $formTemplate): JsonResponse
+    public function show(Request $request, FormTemplate $formTemplate): JsonResponse
     {
         // Admins can see all forms, others can only see active forms
-        if (Auth::user()->role !== 'admin' && !$formTemplate->is_active) {
+        if ($request->get('user_role') !== 'admin' && !$formTemplate->is_active) {
             return response()->json(['error' => 'Form not found or not active'], 404);
         }
 
