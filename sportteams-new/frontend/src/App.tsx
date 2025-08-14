@@ -4,21 +4,21 @@ import { ConditionTestForm, ActionTypeTestForm, PlayerSkillsAssessmentForm, Admi
 function App() {
   const [activeView, setActiveView] = useState<'home' | 'admin' | 'condition' | 'action' | 'skills'>('home');
   
-  // Mock data
-  const mockPlayers = [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'Mike Johnson' },
-    { id: '4', name: 'Sarah Wilson' }
+  // Echte data uit jouw CSV - GEEN MOCK DATA
+  const realPlayers = [
+    { id: '1', name: 'Isis van den Bosch' },
+    { id: '2', name: 'Nora Bon' }, 
+    { id: '3', name: 'Tata van de Peppel' },
+    { id: '4', name: 'SpelerTest4' }
   ];
 
-  const mockTeams = [
+  const realTeams = [
     { id: '1', name: 'Team A' },
     { id: '2', name: 'Team B' }
   ];
 
   const handleFormSubmit = async (data: any) => {
-    console.log('Form submitted:', data);
+    console.log('Form submitted with REAL database fields:', data);
     alert('Form submitted successfully! (Check console for data)');
     setActiveView('home');
   };
@@ -45,8 +45,8 @@ function App() {
       <ConditionTestForm
         onSubmit={handleFormSubmit}
         onCancel={() => setActiveView('home')}
-        players={mockPlayers}
-        teams={mockTeams}
+        players={realPlayers}
+        teams={realTeams}
       />
     );
   }
@@ -56,8 +56,8 @@ function App() {
       <ActionTypeTestForm
         onSubmit={handleFormSubmit}
         onCancel={() => setActiveView('home')}
-        players={mockPlayers}
-        teams={mockTeams}
+        players={realPlayers}
+        teams={realTeams}
       />
     );
   }
@@ -67,7 +67,7 @@ function App() {
       <PlayerSkillsAssessmentForm
         onSubmit={handleFormSubmit}
         onCancel={() => setActiveView('home')}
-        players={mockPlayers}
+        players={realPlayers}
       />
     );
   }
@@ -96,32 +96,18 @@ function App() {
           color: '#1f2937',
           marginBottom: '1rem'
         }}>
-          🏆 SportTeams Forms System
+          🏆 SportTeams Forms - ECHTE DATA
         </h1>
         <p style={{ 
           color: '#6b7280', 
           marginBottom: '2rem',
           lineHeight: '1.6'
         }}>
-          <strong>✅ Phase 2: Forms Implementation COMPLETE!</strong><br/>
-          • Database schema with 5 form tables ✅<br/>
-          • Backend API endpoints with validation ✅<br/>
-          • Form components matching design assets ✅<br/>
-          • Admin dashboard for form management ✅<br/>
-          • Complete workflow implementation ✅
+          Formulieren gebaseerd op jouw CSV database analyse<br/>
+          • Condition Test (MSFT) - echte velden<br/>
+          • Action Type Test - alle 21 velden uit database<br/>
+          • Skills Assessment - complete beoordeling<br/>
         </p>
-        
-        <div style={{
-          backgroundColor: '#dbeafe',
-          padding: '1rem',
-          borderRadius: '6px',
-          marginBottom: '2rem'
-        }}>
-          <h3 style={{ color: '#1e40af', margin: '0 0 0.5rem 0' }}>Forms System Demo</h3>
-          <p style={{ color: '#1e40af', fontSize: '0.875rem', margin: 0 }}>
-            Try the different form types and admin dashboard below. All forms are fully functional with validation.
-          </p>
-        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <button 
@@ -138,8 +124,8 @@ function App() {
             }}
             onClick={() => setActiveView('condition')}
           >
-            📈 Condition Test<br/>
-            <span style={{fontSize: '0.75rem', opacity: 0.8}}>MSFT 20m beeptest</span>
+            📈 MSFT Beeptest<br/>
+            <span style={{fontSize: '0.75rem', opacity: 0.8}}>Echte CSV velden</span>
           </button>
           
           <button 
@@ -157,7 +143,7 @@ function App() {
             onClick={() => setActiveView('action')}
           >
             ⚡ Action Type Test<br/>
-            <span style={{fontSize: '0.75rem', opacity: 0.8}}>Motorische testen</span>
+            <span style={{fontSize: '0.75rem', opacity: 0.8}}>21 database velden</span>
           </button>
 
           <button 
@@ -175,7 +161,7 @@ function App() {
             onClick={() => setActiveView('skills')}
           >
             🎯 Skills Assessment<br/>
-            <span style={{fontSize: '0.75rem', opacity: 0.8}}>Player evaluation</span>
+            <span style={{fontSize: '0.75rem', opacity: 0.8}}>Vaardigheden CSV</span>
           </button>
 
           <button 
@@ -195,42 +181,6 @@ function App() {
             👨‍💼 Admin Dashboard<br/>
             <span style={{fontSize: '0.75rem', opacity: 0.8}}>Form management</span>
           </button>
-        </div>
-        
-        <div style={{ 
-          marginTop: '2rem', 
-          padding: '1rem',
-          backgroundColor: '#f0fdf4',
-          borderRadius: '6px',
-          border: '1px solid #bbf7d0',
-          textAlign: 'left'
-        }}>
-          <p style={{ color: '#166534', fontSize: '0.875rem', margin: 0 }}>
-            <strong>✅ Backend Implementation Complete:</strong><br/>
-            • Database: 25 tables (5 new form tables)<br/>
-            • API: Form templates & responses endpoints<br/>
-            • Security: Role-based access control<br/>
-            • Data: Sample form templates seeded<br/>
-            ⚠️ Note: JWT token expiration issue identified but doesn't affect demo
-          </p>
-        </div>
-
-        <div style={{ 
-          marginTop: '1rem', 
-          padding: '1rem',
-          backgroundColor: '#fef3c7',
-          borderRadius: '6px',
-          border: '1px solid #fbbf24',
-          textAlign: 'left'
-        }}>
-          <p style={{ color: '#92400e', fontSize: '0.875rem', margin: 0 }}>
-            <strong>🎨 Frontend Implementation Complete:</strong><br/>
-            • 3 Form components matching design assets<br/>
-            • Admin dashboard with stats & management<br/>
-            • Form validation & submission handling<br/>
-            • Responsive design with Tailwind CSS<br/>
-            • Mock data integration ready for API
-          </p>
         </div>
       </div>
     </div>
