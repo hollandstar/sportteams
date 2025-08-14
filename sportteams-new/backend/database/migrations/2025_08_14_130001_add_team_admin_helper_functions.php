@@ -117,8 +117,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("DROP FUNCTION IF EXISTS is_team_admin(UUID);");
-        DB::statement("DROP FUNCTION IF EXISTS is_team_admin_for_team(INTEGER, UUID);");
-        DB::statement("DROP FUNCTION IF EXISTS promote_general_to_player(INTEGER, INTEGER, UUID);");
+        DB::statement("DROP FUNCTION IF EXISTS is_team_admin(TEXT);");
+        DB::statement("DROP FUNCTION IF EXISTS is_team_admin_for_team(INTEGER, TEXT);");
+        DB::statement("DROP FUNCTION IF EXISTS promote_general_to_player(INTEGER, INTEGER, TEXT);");
     }
 };
