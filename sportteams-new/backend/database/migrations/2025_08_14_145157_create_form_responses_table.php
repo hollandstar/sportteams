@@ -13,7 +13,20 @@ return new class extends Migration
     {
         Schema::create('form_responses', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('form_template_id');
+            $table->unsignedBigInteger('player_id');
+            $table->unsignedBigInteger('team_id');
+            $table->json('responses'); // JSON data with all form responses
+            $table->unsignedBigInteger('submitted_by');
+            $table->timestamp('submitted_at');
             $table->timestamps();
+            
+            $table->index(['form_template_id', 'player_id']);
+            $table->index(['team_id', 'submitted_at']);
+            $table->foreign('form_template_id')->references('id')->on('form_templates');
+            $table->foreign('player_id')->references('id')->on('users');
+            $table->foreign('team_id')->references('id')->on('teams');
+            $table->foreign('submitted_by')->references('id')->on('users');
         });
     }
 

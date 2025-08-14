@@ -13,7 +13,21 @@ return new class extends Migration
     {
         Schema::create('condition_tests', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('form_response_id');
+            $table->unsignedBigInteger('player_id');
+            $table->unsignedBigInteger('team_id');
+            $table->string('test_type'); // '30-15 IFT', 'MSFT 20m beeptest', etc.
+            $table->json('test_results'); // Specific test results data
+            $table->date('test_date');
+            $table->unsignedBigInteger('tested_by');
             $table->timestamps();
+            
+            $table->index(['player_id', 'test_date']);
+            $table->index(['team_id', 'test_type']);
+            $table->foreign('form_response_id')->references('id')->on('form_responses');
+            $table->foreign('player_id')->references('id')->on('users');
+            $table->foreign('team_id')->references('id')->on('teams');
+            $table->foreign('tested_by')->references('id')->on('users');
         });
     }
 
