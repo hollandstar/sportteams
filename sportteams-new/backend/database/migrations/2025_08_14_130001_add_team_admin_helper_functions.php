@@ -19,7 +19,7 @@ return new class extends Migration
                     SELECT 1 
                     FROM profiles p
                     INNER JOIN team_admins ta ON p.id = ta.admin_profile_id
-                    WHERE p.user_id = user_uuid
+                    WHERE p.user_id = user_uuid::text
                     AND p.role = 'team_admin'
                 );
             END;
