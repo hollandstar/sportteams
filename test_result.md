@@ -179,8 +179,14 @@ The user initially built a prototype "SportTeams" application with PostgreSQL on
 ## Current Issues and Resolutions
 
 ### Current Issues:
-- **Missing TeamAdminController**: Laravel backend missing App\Http\Controllers\Api\TeamAdminController class
-- **Token Expiration**: Some tests failing due to token expiration during extended test sequence
+- **JWT Token Expiration**: Tokens expiring too quickly (within seconds) causing admin endpoints to fail during testing
+- **Forms Frontend**: Frontend form components not yet implemented
+
+### In Progress:
+- **Forms Backend**: ✅ COMPLETED - Database schema, API endpoints, and sample data created
+- **Forms Frontend**: 🚧 IN PROGRESS - Building React form components
 
 ### Resolved Issues:
 - **PostgreSQL PDO Driver**: Was missing initially, resolved by installing php-pgsql package and restarting Laravel backend service
+- **Missing TeamAdminController**: Fixed during previous development phase  
+- **Forms Database Schema**: ✅ COMPLETED - All 5 form tables created and populated with sample templates
