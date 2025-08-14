@@ -26,6 +26,39 @@ class SportTeamsBackendTester:
             "password": "admin123"
         }
         
+    def ensure_valid_token(self) -> bool:
+        """Ensure we have a valid access token, refresh if needed"""
+        if not self.access_token or not self.refresh_token:
+            return False
+            
+        try:
+            # Test current token
+            headers = {'Authorization': f'Bearer {self.access_token}'}
+            response = self.session.get(f"{self.base_url}/auth/me", headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                return True  # Token is still valid
+            
+            # Token expired, try to refresh
+            if self.refresh_token:
+                refresh_response = self.session.post(
+                    f"{self.base_url}/auth/refresh",
+                    json={"refresh_token": self.refresh_token},
+                    timeout=10
+                )
+                
+                if refresh_response.status_code == 200:
+                    data = refresh_response.json()
+                    if data.get('status') == 'success' and 'tokens' in data:
+                        self.access_token = data['tokens']['access_token']
+                        self.refresh_token = data['tokens']['refresh_token']
+                        return True
+            
+            return False
+            
+        except:
+            return False
+        
     def log_result(self, test_name: str, success: bool, message: str, details: Dict = None):
         """Log test result"""
         result = {
