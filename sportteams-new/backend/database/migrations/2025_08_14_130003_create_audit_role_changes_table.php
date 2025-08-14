@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('audit_role_changes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id'); // The user whose role was changed
-            $table->uuid('profile_id'); // The profile that was changed
+            $table->id();
+            $table->string('user_id'); // Keep as string for auth user ID
+            $table->integer('profile_id'); // The profile that was changed  
             $table->string('old_role');
             $table->string('new_role');
-            $table->uuid('changed_by'); // The user who made the change
-            $table->uuid('team_id')->nullable(); // Team context if applicable
+            $table->string('changed_by'); // The user who made the change
+            $table->integer('team_id')->nullable(); // Team context if applicable
             $table->text('notes')->nullable();
             $table->timestamp('created_at');
 
