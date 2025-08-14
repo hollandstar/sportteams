@@ -1,28 +1,37 @@
 import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState, AppDispatch } from './store'
+import { loginUser, getCurrentUser, logout, loadStoredAuth } from './store/slices/authSlice'
 import { apiService } from './services/api'
 import './App.css'
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
 function App() {
+  const dispatch = useDispatch<AppDispatch>()
+  const { user, isAuthenticated, loading, error } = useSelector((state: RootState) => state.auth)
+  
   const [connectionStatus, setConnectionStatus] = useState<string>('Testing...')
-  const [user, setUser] = useState<User | null>(null)
   const [loginData, setLoginData] = useState({ email: '', password: '' })
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // Load stored authentication and test API connection
+    dispatch(loadStoredAuth())
     testApiConnection()
-  }, [])
+    
+    // If we have stored auth, try to get current user
+    const token = localStorage.getItem('auth_token')
+    if (token && !user) {
+      dispatch(getCurrentUser())
+    }
+  }, [dispatch, user])
 
   const testApiConnection = async () => {
     try {
       const response = await apiService.testConnection()
-      setConnectionStatus(`✅ Connected - ${response.data.tables_count} tables`)
+      if (response.data?.security_enhanced) {
+        setConnectionStatus(`✅ Connected (Enhanced Security) - ${response.data.tables_count} tables`)
+      } else {
+        setConnectionStatus(`✅ Connected - ${response.data.tables_count} tables`)
+      }
     } catch (error) {
       setConnectionStatus('❌ Connection failed')
       console.error('API connection failed:', error)
@@ -31,27 +40,29 @@ function App() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     
     try {
-      const response = await apiService.login(loginData)
-      if (response.status === 'success') {
-        setUser(response.user)
-        apiService.setToken(response.token)
-        setConnectionStatus('✅ Logged in successfully!')
-      }
+      await dispatch(loginUser(loginData)).unwrap()
+      setConnectionStatus('✅ Logged in successfully!')
     } catch (error) {
       console.error('Login failed:', error)
-      setConnectionStatus('❌ Login failed')
-    } finally {
-      setLoading(false)
+      setConnectionStatus('❌ Login failed: ' + error)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logout()).unwrap()
+      setConnectionStatus('✅ Logged out successfully')
+    } catch (error) {
+      console.error('Logout error:', error)
     }
   }
 
   return (
     <div className="App">
-      <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
-        <h1>🏒 SportTeams - Phase 1 Test</h1>
+      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        <h1>🏒 SportTeams - Phase 2: Enhanced Security</h1>
         
         <div style={{ 
           padding: '15px', 
@@ -63,9 +74,22 @@ function App() {
           <p>{connectionStatus}</p>
         </div>
 
-        {!user ? (
+        {error && (
+          <div style={{ 
+            padding: '15px', 
+            margin: '20px 0', 
+            backgroundColor: '#ffebee', 
+            borderRadius: '8px',
+            color: '#c62828'
+          }}>
+            <h3>❌ Error:</h3>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!isAuthenticated ? (
           <form onSubmit={handleLogin} style={{ marginTop: '20px' }}>
-            <h3>Test Login</h3>
+            <h3>Enhanced JWT Login</h3>
             <div style={{ marginBottom: '10px' }}>
               <input
                 type="email"
@@ -101,14 +125,14 @@ function App() {
                 style={{ 
                   width: '100%', 
                   padding: '12px', 
-                  backgroundColor: '#4CAF50', 
+                  backgroundColor: loading ? '#ccc' : '#4CAF50', 
                   color: 'white', 
                   border: 'none', 
                   borderRadius: '4px',
                   cursor: loading ? 'not-allowed' : 'pointer'
                 }}
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {loading ? 'Logging in...' : 'Login with Enhanced Security'}
               </button>
             </div>
           </form>
@@ -119,17 +143,34 @@ function App() {
             backgroundColor: '#e8f5e8', 
             borderRadius: '8px' 
           }}>
-            <h3>✅ Logged in as:</h3>
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Role:</strong> {user.role}</p>
+            <h3>✅ Authenticated User:</h3>
+            <div style={{ textAlign: 'left' }}>
+              <p><strong>Name:</strong> {user?.name}</p>
+              <p><strong>Email:</strong> {user?.email}</p>
+              <p><strong>Role:</strong> {user?.role}</p>
+              <p><strong>Profile ID:</strong> {user?.profile_id}</p>
+              <p><strong>Team Scopes:</strong> {user?.team_scopes?.length ? user.team_scopes.join(', ') : 'Admin (All Teams)'}</p>
+              <p><strong>Language:</strong> {user?.preferred_language || 'nl'}</p>
+              {user?.last_login_at && <p><strong>Last Login:</strong> {new Date(user.last_login_at).toLocaleString()}</p>}
+              
+              <details style={{ marginTop: '10px' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>🔐 Permissions</summary>
+                <div style={{ marginTop: '5px', fontSize: '12px', backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '4px' }}>
+                  {user?.permissions && Object.entries(user.permissions).map(([key, value]) => (
+                    <div key={key} style={{ marginBottom: '2px' }}>
+                      <span style={{ color: value ? 'green' : 'red' }}>
+                        {value ? '✅' : '❌'}
+                      </span> {key.replace(/_/g, ' ')}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+            
             <button 
-              onClick={() => {
-                setUser(null)
-                apiService.clearToken()
-                setConnectionStatus('Logged out')
-              }}
+              onClick={handleLogout}
               style={{ 
+                marginTop: '15px',
                 padding: '8px 16px', 
                 backgroundColor: '#f44336', 
                 color: 'white', 
@@ -138,7 +179,7 @@ function App() {
                 cursor: 'pointer'
               }}
             >
-              Logout
+              Secure Logout
             </button>
           </div>
         )}
@@ -149,14 +190,17 @@ function App() {
           backgroundColor: '#e3f2fd', 
           borderRadius: '8px' 
         }}>
-          <h4>✅ Phase 1 Complete!</h4>
+          <h4>✅ Phase 2: Enhanced Security Complete!</h4>
           <ul style={{ textAlign: 'left' }}>
-            <li>✅ PostgreSQL database (17 tables)</li>
-            <li>✅ Laravel API backend</li>
-            <li>✅ React frontend (Vite)</li>
-            <li>✅ End-to-end authentication</li>
+            <li>✅ <strong>Encrypted JWT</strong> with JWE (JSON Web Encryption)</li>
+            <li>✅ <strong>Token Rotation</strong> with secure refresh tokens</li>
+            <li>✅ <strong>Team-scoped Access</strong> replacing insecure RLS</li>
+            <li>✅ <strong>Rate Limiting</strong> and security monitoring</li>
+            <li>✅ <strong>Redux State Management</strong> for frontend</li>
+            <li>✅ <strong>Enhanced Permissions</strong> with role-based access</li>
+            <li>✅ <strong>Security Logging</strong> and audit trails</li>
           </ul>
-          <p><small>Ready for Phase 2: Advanced Security & JWT!</small></p>
+          <p><small>🚀 Ready for Phase 3: Player Management System!</small></p>
         </div>
       </div>
     </div>
