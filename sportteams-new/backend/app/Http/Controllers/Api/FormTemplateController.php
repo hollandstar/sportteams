@@ -179,9 +179,9 @@ class FormTemplateController extends Controller
     /**
      * Get form statistics (Admin only)
      */
-    public function getStatistics(): JsonResponse
+    public function getStatistics(Request $request): JsonResponse
     {
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
