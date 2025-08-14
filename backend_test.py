@@ -1041,11 +1041,11 @@ class SportTeamsBackendTester:
 
     def test_forms_templates_create(self) -> bool:
         """Test POST /api/v1/forms/templates endpoint (Admin-only)"""
-        if not self.access_token:
+        if not self.ensure_valid_token():
             self.log_result(
                 "Forms Templates Create Test",
                 False,
-                "No access token available - login test must pass first",
+                "No valid access token available - authentication failed",
                 {}
             )
             return False
