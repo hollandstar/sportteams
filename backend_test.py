@@ -1801,6 +1801,62 @@ class SportTeamsBackendTester:
             )
             return False
 
+    def run_forms_system_tests(self) -> Dict[str, Any]:
+        """Run comprehensive forms system tests based on review request"""
+        print("🚀 Starting SportTeams Forms System Comprehensive Tests")
+        print(f"🔗 Testing API at: {self.base_url}")
+        print("=" * 60)
+        
+        # Test sequence for Forms System based on review request
+        tests = [
+            ("Basic Connection", self.test_basic_connection),
+            ("Database Connection", self.test_database_connection),
+            ("Authentication Login", self.test_authentication_login),
+            ("JWT Token Validation", self.test_jwt_token_validation),
+            ("Database Tables Verification", self.test_database_tables_verification),
+            ("Forms Templates Get All", self.test_forms_templates_get_all),
+            ("Forms Active Get", self.test_forms_active_get),
+            ("Action Type Test Form Submission", self.test_forms_responses_submit_action_type),
+            ("MSFT Condition Test Form Submission", self.test_forms_responses_submit_condition_test),
+            ("Skills Assessment Form Submission", self.test_forms_responses_submit_skills_assessment),
+            ("Forms Responses Get All", self.test_forms_responses_get_all),
+            ("Forms Statistics Get", self.test_forms_statistics_get),
+        ]
+        
+        passed = 0
+        failed = 0
+        
+        for test_name, test_func in tests:
+            try:
+                print(f"🧪 Running: {test_name}")
+                result = test_func()
+                if result:
+                    passed += 1
+                else:
+                    failed += 1
+                    
+                # Add small delay between tests to avoid token issues
+                time.sleep(0.5)
+                    
+            except Exception as e:
+                print(f"❌ EXCEPTION in {test_name}: {str(e)}")
+                failed += 1
+                self.log_result(test_name, False, f"Exception: {str(e)}", {"exception": str(e)})
+        
+        print("=" * 60)
+        print("📊 FORMS SYSTEM TEST SUMMARY")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        print(f"📈 Success Rate: {(passed / (passed + failed) * 100):.1f}%")
+        
+        return {
+            "total_tests": passed + failed,
+            "passed": passed,
+            "failed": failed,
+            "success_rate": passed / (passed + failed) * 100 if (passed + failed) > 0 else 0,
+            "results": self.test_results
+        }
+
     def run_all_tests(self) -> Dict[str, Any]:
         """Run all backend tests for Forms API system"""
         print("🚀 Starting SportTeams Laravel Backend API Tests - Forms API System")
