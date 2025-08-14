@@ -25,35 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Remove new policies
-        DB::statement("DROP POLICY IF EXISTS \"Admins can manage all team admin assignments\" ON team_admins;");
-        DB::statement("DROP POLICY IF EXISTS \"Team admins can view their own assignments\" ON team_admins;");
-        
-        DB::statement("DROP POLICY IF EXISTS \"Admins can manage all players\" ON players;");
-        DB::statement("DROP POLICY IF EXISTS \"Team admins can manage players in their teams\" ON players;");
-        DB::statement("DROP POLICY IF EXISTS \"Coaches can view players in their teams\" ON players;");
-        DB::statement("DROP POLICY IF EXISTS \"Players can view their own data\" ON players;");
-        
-        DB::statement("DROP POLICY IF EXISTS \"Users can view their own profile\" ON profiles;");
-        DB::statement("DROP POLICY IF EXISTS \"Admins can view all profiles\" ON profiles;");
-        DB::statement("DROP POLICY IF EXISTS \"Team admins can view profiles of players in their teams\" ON profiles;");
-        DB::statement("DROP POLICY IF EXISTS \"Coaches can view profiles of players in their teams\" ON profiles;");
-
-        // Restore original policies
-        DB::statement("
-            CREATE POLICY \"Players are viewable by authenticated users\"
-            ON players
-            FOR SELECT
-            USING (true);
-        ");
-
-        DB::statement("
-            CREATE POLICY \"Profiles are viewable by authenticated users\"
-            ON profiles
-            FOR SELECT
-            USING (true);
-        ");
-
-        DB::statement("ALTER TABLE team_admins DISABLE ROW LEVEL SECURITY;");
+        // No RLS policies to remove in this Laravel implementation
     }
 };
