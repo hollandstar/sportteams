@@ -514,9 +514,480 @@ class SportTeamsBackendTester:
             )
             return False
 
+    def test_team_admin_database_schema(self) -> bool:
+        """Test Team Admin database schema and helper functions"""
+        if not self.access_token:
+            self.log_result(
+                "Team Admin Database Schema Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Test database connection and table count
+            response = self.session.get(f"{self.base_url}/test", headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                tables_count = data.get('data', {}).get('tables_count', 0)
+                
+                # Check if we have the expected tables (should be 20+ with team admin tables)
+                schema_working = int(tables_count) >= 20
+                
+                self.log_result(
+                    "Team Admin Database Schema Test",
+                    schema_working,
+                    f"Database schema {'verified' if schema_working else 'incomplete'} - {tables_count} tables found",
+                    {
+                        "tables_count": tables_count,
+                        "expected_minimum": 20,
+                        "includes_team_admin_tables": schema_working
+                    }
+                )
+                return schema_working
+            else:
+                self.log_result(
+                    "Team Admin Database Schema Test",
+                    False,
+                    f"HTTP {response.status_code}: {response.text}",
+                    {"status_code": response.status_code}
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Team Admin Database Schema Test",
+                False,
+                f"Schema test failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_team_admin_get_managed_teams(self) -> bool:
+        """Test GET /api/v1/team-admin/teams endpoint"""
+        if not self.access_token:
+            self.log_result(
+                "Team Admin Get Managed Teams Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/team-admin/teams",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    teams = data.get('data', {}).get('teams', [])
+                    self.log_result(
+                        "Team Admin Get Managed Teams Test",
+                        True,
+                        f"Successfully retrieved managed teams - {len(teams)} teams found",
+                        {
+                            "status_code": response.status_code,
+                            "teams_count": len(teams),
+                            "teams_data": teams[:2] if teams else []  # Show first 2 teams
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Team Admin Get Managed Teams Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Team Admin Get Managed Teams Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Team Admin Get Managed Teams Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_team_admin_get_team_players(self) -> bool:
+        """Test GET /api/v1/team-admin/teams/{teamId}/players endpoint"""
+        if not self.access_token:
+            self.log_result(
+                "Team Admin Get Team Players Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # First get managed teams to get a valid team ID
+            teams_response = self.session.get(
+                f"{self.base_url}/team-admin/teams",
+                headers=headers,
+                timeout=10
+            )
+            
+            if teams_response.status_code != 200:
+                self.log_result(
+                    "Team Admin Get Team Players Test",
+                    False,
+                    "Could not retrieve managed teams to test with",
+                    {"teams_response_status": teams_response.status_code}
+                )
+                return False
+            
+            teams_data = teams_response.json()
+            teams = teams_data.get('data', {}).get('teams', [])
+            
+            if not teams:
+                self.log_result(
+                    "Team Admin Get Team Players Test",
+                    True,  # Not a failure - just no teams to test with
+                    "No managed teams available to test team players endpoint",
+                    {"teams_count": 0}
+                )
+                return True
+            
+            # Test with first available team
+            test_team_id = teams[0]['id']
+            response = self.session.get(
+                f"{self.base_url}/team-admin/teams/{test_team_id}/players",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    players = data.get('data', {}).get('players', [])
+                    self.log_result(
+                        "Team Admin Get Team Players Test",
+                        True,
+                        f"Successfully retrieved team players - {len(players)} players found",
+                        {
+                            "status_code": response.status_code,
+                            "team_id": test_team_id,
+                            "players_count": len(players),
+                            "players_data": players[:2] if players else []  # Show first 2 players
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Team Admin Get Team Players Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Team Admin Get Team Players Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Team Admin Get Team Players Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_team_admin_create_player(self) -> bool:
+        """Test POST /api/v1/team-admin/players endpoint"""
+        if not self.access_token:
+            self.log_result(
+                "Team Admin Create Player Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # First get managed teams to get a valid team ID
+            teams_response = self.session.get(
+                f"{self.base_url}/team-admin/teams",
+                headers=headers,
+                timeout=10
+            )
+            
+            if teams_response.status_code != 200:
+                self.log_result(
+                    "Team Admin Create Player Test",
+                    False,
+                    "Could not retrieve managed teams to test with",
+                    {"teams_response_status": teams_response.status_code}
+                )
+                return False
+            
+            teams_data = teams_response.json()
+            teams = teams_data.get('data', {}).get('teams', [])
+            
+            if not teams:
+                self.log_result(
+                    "Team Admin Create Player Test",
+                    True,  # Not a failure - just no teams to test with
+                    "No managed teams available to test create player endpoint",
+                    {"teams_count": 0}
+                )
+                return True
+            
+            # Test creating a new player
+            test_team_id = teams[0]['id']
+            import time
+            unique_id = int(time.time())
+            
+            player_data = {
+                "team_id": test_team_id,
+                "name": f"Test Player {unique_id}",
+                "email": f"testplayer{unique_id}@sportteams.nl",
+                "birth_date": "1995-06-15",
+                "position": "Forward",
+                "jersey_number": 10
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/team-admin/players",
+                json=player_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('status') == 'success':
+                    self.log_result(
+                        "Team Admin Create Player Test",
+                        True,
+                        "Successfully created new player",
+                        {
+                            "status_code": response.status_code,
+                            "team_id": test_team_id,
+                            "player_data": player_data,
+                            "response_data": data.get('data', {})
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Team Admin Create Player Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Team Admin Create Player Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data,
+                        "player_data": player_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Team Admin Create Player Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_team_admin_audit_log(self) -> bool:
+        """Test GET /api/v1/team-admin/audit-log endpoint"""
+        if not self.access_token:
+            self.log_result(
+                "Team Admin Audit Log Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/team-admin/audit-log",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    audit_log = data.get('data', {}).get('audit_log', [])
+                    self.log_result(
+                        "Team Admin Audit Log Test",
+                        True,
+                        f"Successfully retrieved audit log - {len(audit_log)} entries found",
+                        {
+                            "status_code": response.status_code,
+                            "audit_entries_count": len(audit_log),
+                            "sample_entries": audit_log[:2] if audit_log else []  # Show first 2 entries
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Team Admin Audit Log Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Team Admin Audit Log Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Team Admin Audit Log Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_team_admin_security_authorization(self) -> bool:
+        """Test security and authorization for team admin endpoints"""
+        try:
+            # Test without token (should fail with 401)
+            response = self.session.get(f"{self.base_url}/team-admin/teams", timeout=10)
+            
+            if response.status_code == 401:
+                unauthorized_success = True
+                unauthorized_message = "Correctly rejected request without token"
+            else:
+                unauthorized_success = False
+                unauthorized_message = f"Expected 401, got {response.status_code}"
+            
+            # Test with invalid token (should fail with 401)
+            headers = {'Authorization': 'Bearer invalid_token_here'}
+            response = self.session.get(f"{self.base_url}/team-admin/teams", headers=headers, timeout=10)
+            
+            if response.status_code == 401:
+                invalid_token_success = True
+                invalid_token_message = "Correctly rejected invalid token"
+            else:
+                invalid_token_success = False
+                invalid_token_message = f"Expected 401 for invalid token, got {response.status_code}"
+            
+            overall_success = unauthorized_success and invalid_token_success
+            
+            self.log_result(
+                "Team Admin Security Authorization Test",
+                overall_success,
+                "Team admin security working correctly" if overall_success else "Team admin security issues detected",
+                {
+                    "no_token_test": {
+                        "success": unauthorized_success,
+                        "message": unauthorized_message
+                    },
+                    "invalid_token_test": {
+                        "success": invalid_token_success,
+                        "message": invalid_token_message
+                    }
+                }
+            )
+            return overall_success
+            
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Team Admin Security Authorization Test",
+                False,
+                f"Security test failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
     def run_all_tests(self) -> Dict[str, Any]:
         """Run all backend tests"""
-        print("🚀 Starting SportTeams Laravel Backend API Tests")
+        print("🚀 Starting SportTeams Laravel Backend API Tests with Team Admin Features")
         print(f"🔗 Testing API at: {self.base_url}")
         print("=" * 60)
         
@@ -529,6 +1000,12 @@ class SportTeamsBackendTester:
             ("JWT Token Validation", self.test_jwt_token_validation),
             ("Security Middleware", self.test_security_middleware),
             ("Token Refresh", self.test_token_refresh),
+            ("Team Admin Database Schema", self.test_team_admin_database_schema),
+            ("Team Admin Get Managed Teams", self.test_team_admin_get_managed_teams),
+            ("Team Admin Get Team Players", self.test_team_admin_get_team_players),
+            ("Team Admin Create Player", self.test_team_admin_create_player),
+            ("Team Admin Audit Log", self.test_team_admin_audit_log),
+            ("Team Admin Security Authorization", self.test_team_admin_security_authorization),
             ("Logout Functionality", self.test_logout_functionality),
         ]
         
