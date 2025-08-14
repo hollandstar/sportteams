@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-SportTeams Laravel Backend API Test Suite
-Tests the Laravel backend API connectivity and functionality
+SportTeams Laravel Backend API Test Suite - Forms API Testing
+Tests the new Forms API system implementation
 """
 
 import requests
@@ -18,6 +18,7 @@ class SportTeamsBackendTester:
         self.access_token = None
         self.refresh_token = None
         self.test_results = []
+        self.created_form_template_id = None
         
         # Test credentials from the review request
         self.test_credentials = {
