@@ -1373,22 +1373,13 @@ class SportTeamsBackendTester:
             )
             return False
 
-    def test_forms_responses_submit(self) -> bool:
-        """Test POST /api/v1/forms/responses endpoint"""
+    def test_forms_responses_submit_action_type(self) -> bool:
+        """Test POST /api/v1/forms/responses endpoint with Action Type Test data"""
         if not self.ensure_valid_token():
             self.log_result(
-                "Forms Responses Submit Test",
+                "Action Type Test Form Submission",
                 False,
                 "No valid access token available - authentication failed",
-                {}
-            )
-            return False
-            
-        if not self.created_form_template_id:
-            self.log_result(
-                "Forms Responses Submit Test",
-                False,
-                "No form template ID available - create template test must pass first",
                 {}
             )
             return False
@@ -1399,17 +1390,26 @@ class SportTeamsBackendTester:
                 'Content-Type': 'application/json'
             }
             
-            # First, get a valid player and team ID from the database
-            # For testing, we'll use the admin user as both player and submitter
-            # In a real scenario, these would be different users
+            # Use the existing Action Type Test template (ID 2 from active forms)
             response_data = {
-                "form_template_id": self.created_form_template_id,
-                "player_id": 1,  # Assuming admin user has ID 1
+                "form_template_id": 2,  # Action Type Test template
+                "player_id": 1,  # Admin user as test player
                 "team_id": 1,    # Assuming there's a team with ID 1
                 "responses": {
-                    "test_type": "30-15 IFT",
+                    "player_name": "Test Speler",
+                    "team": "Test Team",
+                    "at_category": "Motorische testen A",
                     "test_date": "2025-01-15",
-                    "results": 85
+                    "linker_rechter_voorkeur": "Rechts",
+                    "duwen_trekken_voorkeur": "Duwen",
+                    "roteren_lineair": "Lineair",
+                    "starthouding": "Hoog",
+                    "snelheid_kracht": "Snelheid",
+                    "individueel_groep": "Individueel",
+                    "stap_sprong": "Sprong",
+                    "enkele_meerdere_sprongen": "Enkele",
+                    "explosief_gecontroleerd": "Explosief",
+                    "balans_beweging": "Beweging"
                 }
             }
             
@@ -1425,9 +1425,9 @@ class SportTeamsBackendTester:
                 if data.get('status') == 'success':
                     form_response = data.get('data', {})
                     self.log_result(
-                        "Forms Responses Submit Test",
+                        "Action Type Test Form Submission",
                         True,
-                        "Successfully submitted form response",
+                        "Successfully submitted Action Type Test form response",
                         {
                             "status_code": response.status_code,
                             "response_id": form_response.get('id'),
@@ -1440,7 +1440,7 @@ class SportTeamsBackendTester:
                     return True
                 else:
                     self.log_result(
-                        "Forms Responses Submit Test",
+                        "Action Type Test Form Submission",
                         False,
                         f"API returned error: {data.get('message', 'Unknown error')}",
                         {"response": data}
@@ -1453,7 +1453,7 @@ class SportTeamsBackendTester:
                     error_data = {"text": response.text}
                     
                 self.log_result(
-                    "Forms Responses Submit Test",
+                    "Action Type Test Form Submission",
                     False,
                     f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
                     {
@@ -1466,7 +1466,207 @@ class SportTeamsBackendTester:
                 
         except requests.exceptions.RequestException as e:
             self.log_result(
-                "Forms Responses Submit Test",
+                "Action Type Test Form Submission",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_responses_submit_condition_test(self) -> bool:
+        """Test POST /api/v1/forms/responses endpoint with MSFT Condition Test data"""
+        if not self.ensure_valid_token():
+            self.log_result(
+                "MSFT Condition Test Form Submission",
+                False,
+                "No valid access token available - authentication failed",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Use the existing Condition Test template (ID 1 from active forms)
+            response_data = {
+                "form_template_id": 1,  # Condition Test template
+                "player_id": 1,  # Admin user as test player
+                "team_id": 1,    # Assuming there's a team with ID 1
+                "responses": {
+                    "player_name": "Test Speler",
+                    "team": "Test Team",
+                    "condition_test": "MSFT 20m beeptest",
+                    "test_date": "2025-01-15",
+                    "leeftijd": 25,
+                    "geslacht": "M",
+                    "level_behaald_niveau": "12.5",
+                    "aantal_shuttles": 85,
+                    "totaal_afstand_m": 1700,
+                    "geschatte_vo2max": 52.5,
+                    "classificatie": "Goed",
+                    "opmerkingen": "Goede prestatie, consistent tempo"
+                }
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/forms/responses",
+                json=response_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('status') == 'success':
+                    form_response = data.get('data', {})
+                    self.log_result(
+                        "MSFT Condition Test Form Submission",
+                        True,
+                        "Successfully submitted MSFT Condition Test form response",
+                        {
+                            "status_code": response.status_code,
+                            "response_id": form_response.get('id'),
+                            "form_template_id": form_response.get('form_template_id'),
+                            "player_id": form_response.get('player_id'),
+                            "team_id": form_response.get('team_id'),
+                            "message": data.get('message')
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "MSFT Condition Test Form Submission",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "MSFT Condition Test Form Submission",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data,
+                        "response_data": response_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "MSFT Condition Test Form Submission",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_responses_submit_skills_assessment(self) -> bool:
+        """Test POST /api/v1/forms/responses endpoint with Skills Assessment data"""
+        if not self.ensure_valid_token():
+            self.log_result(
+                "Skills Assessment Form Submission",
+                False,
+                "No valid access token available - authentication failed",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Use the existing Skills Assessment template (ID 3 from active forms)
+            response_data = {
+                "form_template_id": 3,  # Skills Assessment template
+                "player_id": 1,  # Admin user as test player
+                "team_id": 1,    # Assuming there's a team with ID 1
+                "responses": {
+                    "player_name": "Test Speler",
+                    "team": "Test Team",
+                    "assessment_date": "2025-01-15",
+                    "balbeheersing": 8,
+                    "pasnauwkeurigheid": 7,
+                    "schieten": 6,
+                    "aanvallen": 8,
+                    "verdedigen": 7,
+                    "fysieke_conditie": 8,
+                    "spelinzicht": 9,
+                    "teamwork": 8,
+                    "houding_attitude": 9,
+                    "overall_score": 8,
+                    "sterke_punten": "Uitstekend spelinzicht en teamwork. Goede balbeheersing.",
+                    "verbeterpunten": "Schieten kan verbeterd worden. Meer focus op afwerking.",
+                    "coach_notities": "Veelbelovende speler met goede instelling. Blijven werken aan technische vaardigheden."
+                }
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/forms/responses",
+                json=response_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('status') == 'success':
+                    form_response = data.get('data', {})
+                    self.log_result(
+                        "Skills Assessment Form Submission",
+                        True,
+                        "Successfully submitted Skills Assessment form response",
+                        {
+                            "status_code": response.status_code,
+                            "response_id": form_response.get('id'),
+                            "form_template_id": form_response.get('form_template_id'),
+                            "player_id": form_response.get('player_id'),
+                            "team_id": form_response.get('team_id'),
+                            "message": data.get('message')
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Skills Assessment Form Submission",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Skills Assessment Form Submission",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data,
+                        "response_data": response_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Skills Assessment Form Submission",
                 False,
                 f"Request failed: {str(e)}",
                 {"error_type": type(e).__name__}
