@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { RootState, AppDispatch } from './store'
+import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { loginUser, getCurrentUser, logout, loadStoredAuth } from './store/slices/authSlice'
 import { apiService } from './services/api'
 import './App.css'
