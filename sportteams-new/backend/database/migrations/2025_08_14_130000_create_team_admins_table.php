@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('team_admins', function (Blueprint $table) {
             $table->id();
-            $table->uuid('team_id');
-            $table->uuid('admin_profile_id');
+            $table->integer('team_id');
+            $table->integer('admin_profile_id');
             $table->string('admin_name');
             $table->string('team_name');
             $table->timestamps();
