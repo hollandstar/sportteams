@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
@@ -18,11 +17,14 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!Auth::check()) {
+        // Get user role from the SecurityMiddleware
+        $userRole = $request->get('user_role');
+        
+        if (!$userRole) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        if (Auth::user()->role !== $role) {
+        if ($userRole !== $role) {
             return response()->json(['error' => 'Unauthorized - insufficient permissions'], 403);
         }
 
