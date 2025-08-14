@@ -129,7 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">SportTeams</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('nav.logo')}</h2>
             </div>
             
             {/* Close button for mobile */}
