@@ -191,7 +191,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     {user.name}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
-                    {user.role}
+                    {t(`roles.${user.role}`)}
                   </p>
                   {user.team_scopes && user.team_scopes.length > 0 && (
                     <p className="text-xs text-blue-600">
