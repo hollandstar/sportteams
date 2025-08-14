@@ -5,8 +5,8 @@ import { apiService } from './services/api'
 import './App.css'
 
 function App() {
-  const dispatch = useDispatch<AppDispatch>()
-  const { user, isAuthenticated, loading, error } = useSelector((state: RootState) => state.auth)
+  const dispatch = useAppDispatch()
+  const { user, isAuthenticated, loading, error } = useAppSelector((state) => state.auth)
   
   const [connectionStatus, setConnectionStatus] = useState<string>('Testing...')
   const [loginData, setLoginData] = useState({ email: '', password: '' })
