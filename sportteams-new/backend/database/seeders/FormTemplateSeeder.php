@@ -13,10 +13,16 @@ class FormTemplateSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get admin user (assuming one exists)
-        $adminUser = User::where('role', 'admin')->first();
+        // Get admin user via profile relationship
+        $adminProfile = \DB::table('profiles')->where('role', 'admin')->first();
+        if (!$adminProfile) {
+            $this->command->error('No admin profile found. Please create an admin user first.');
+            return;
+        }
+        
+        $adminUser = User::find($adminProfile->user_id);
         if (!$adminUser) {
-            $this->command->error('No admin user found. Please create an admin user first.');
+            $this->command->error('Admin user not found for admin profile.');
             return;
         }
 
