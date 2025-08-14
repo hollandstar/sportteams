@@ -1,8 +1,7 @@
-import axios, { AxiosResponse } from 'axios';
-import type { AxiosInstance } from 'axios';
+import axios from 'axios';
 
 class ApiService {
-  private client: AxiosInstance;
+  private client: any;
   private token: string | null = null;
 
   constructor() {
@@ -20,19 +19,19 @@ class ApiService {
   private setupInterceptors(): void {
     // Request interceptor
     this.client.interceptors.request.use(
-      (config) => {
+      (config: any) => {
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error: any) => Promise.reject(error)
     );
 
     // Response interceptor
     this.client.interceptors.response.use(
-      (response: AxiosResponse) => response,
-      (error) => {
+      (response: any) => response,
+      (error: any) => {
         if (error.response?.status === 401) {
           this.clearToken();
           // Could redirect to login here
