@@ -14,15 +14,35 @@ class SkillAssessment extends Model
         'form_response_id',
         'player_id',
         'team_id',
+        'assessment_date',
+        'assessed_by',
+        
+        // Technische vaardigheden (based on real database data)
         'balbeheersing',
         'pasnauwkeurigheid',
         'schieten',
         'aanvallen',
         'verdedigen',
+        
+        // Fysieke vaardigheden
+        'fysieke_conditie',
+        
+        // Mentale vaardigheden
+        'spelinzicht',
+        'teamwork',
+        'houding_attitude',
+        
+        // Overall score
+        'overall_score',
+        
+        // Feedback sections
+        'sterke_punten',
+        'verbeterpunten',
+        'coach_notities',
+        
+        // Legacy fields
         'physical_skills',
         'mental_skills',
-        'assessment_date',
-        'assessed_by',
     ];
 
     protected $casts = [
@@ -86,5 +106,46 @@ class SkillAssessment extends Model
     {
         $skills = $this->technical_skills;
         return array_sum($skills) / count($skills);
+    }
+
+    /**
+     * Get formatted vaardigheden results as text (matching database format)
+     */
+    public function getFormattedResultsAttribute()
+    {
+        $results = "VAARDIGHEDEN BEOORDELING:\n\n";
+        
+        $results .= "Technische vaardigheden:\n";
+        $results .= "- Balbeheersing: {$this->balbeheersing}/10\n";
+        $results .= "- Passnauwkeurigheid: {$this->pasnauwkeurigheid}/10\n";
+        $results .= "- Schieten: {$this->schieten}/10\n";
+        $results .= "- Aanvallen: {$this->aanvallen}/10\n";
+        $results .= "- Verdedigen: {$this->verdedigen}/10\n\n";
+        
+        $results .= "Fysieke vaardigheden:\n";
+        $results .= "- Fysieke conditie: {$this->fysieke_conditie}/10\n\n";
+        
+        $results .= "Mentale vaardigheden:\n";
+        $results .= "- Spelinzicht: {$this->spelinzicht}/10\n";
+        $results .= "- Teamwork: {$this->teamwork}/10\n";
+        $results .= "- Houding/Attitude: {$this->houding_attitude}/10\n\n";
+        
+        $results .= "OVERALL SCORE: {$this->overall_score}/10\n\n";
+        
+        if ($this->sterke_punten) {
+            $results .= "STERKE PUNTEN:\n{$this->sterke_punten}\n\n";
+        }
+        
+        if ($this->verbeterpunten) {
+            $results .= "VERBETERPUNTEN:\n{$this->verbeterpunten}\n\n";
+        }
+        
+        if ($this->coach_notities) {
+            $results .= "COACH NOTITIES:\n{$this->coach_notities}\n\n";
+        }
+        
+        $results .= "Datum: {$this->assessment_date->format('d-m-Y H:i')}\n";
+        
+        return $results;
     }
 }
