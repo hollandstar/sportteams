@@ -134,10 +134,10 @@ class FormTemplateController extends Controller
     /**
      * Toggle form active status (Admin only)
      */
-    public function toggleActive(FormTemplate $formTemplate): JsonResponse
+    public function toggleActive(Request $request, FormTemplate $formTemplate): JsonResponse
     {
         // Only admins can toggle form status
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
