@@ -148,10 +148,13 @@ class FormResponseController extends Controller
      */
     public function update(Request $request, FormResponse $formResponse): JsonResponse
     {
+        $userId = $request->get('user_id');
+        $userRole = $request->get('user_role');
+        
         // Only allow updates within 24 hours and by admin or the submitter
         if (
             $formResponse->submitted_at->diffInHours(now()) > 24 &&
-            Auth::user()->role !== 'admin'
+            $userRole !== 'admin'
         ) {
             return response()->json([
                 'status' => 'error',
@@ -160,8 +163,8 @@ class FormResponseController extends Controller
         }
 
         if (
-            Auth::id() !== $formResponse->submitted_by &&
-            Auth::user()->role !== 'admin'
+            $userId !== $formResponse->submitted_by &&
+            $userRole !== 'admin'
         ) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
