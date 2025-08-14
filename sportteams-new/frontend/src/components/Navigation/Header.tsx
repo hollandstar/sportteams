@@ -10,6 +10,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     try {
