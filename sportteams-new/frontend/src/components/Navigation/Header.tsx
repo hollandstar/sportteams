@@ -83,12 +83,12 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                   onClick={handleLogout}
                   className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  Uitloggen
+                  {t('nav.logout')}
                 </button>
               </>
             ) : (
               <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Inloggen
+                {t('nav.login')}
               </button>
             )}
           </div>
