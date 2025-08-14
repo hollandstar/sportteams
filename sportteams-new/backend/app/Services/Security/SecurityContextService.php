@@ -134,29 +134,44 @@ class SecurityContextService
     {
         $db = $this->getDbConnection();
         
+        // First, try to update existing record
         $stmt = $db->prepare("
-            INSERT INTO user_security_contexts (
-                user_id, profile_id, role, team_scopes, permissions, last_activity, expires_at
-            ) VALUES (
-                ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '8 hours'
-            )
-            ON CONFLICT (user_id) 
-            DO UPDATE SET
-                profile_id = EXCLUDED.profile_id,
-                role = EXCLUDED.role,
-                team_scopes = EXCLUDED.team_scopes,
-                permissions = EXCLUDED.permissions,
+            UPDATE user_security_contexts 
+            SET profile_id = ?, 
+                role = ?, 
+                team_scopes = ?, 
+                permissions = ?, 
                 last_activity = CURRENT_TIMESTAMP,
                 expires_at = CURRENT_TIMESTAMP + INTERVAL '8 hours'
+            WHERE user_id = ?
         ");
         
         $stmt->execute([
-            $userId,
             $profileId,
             $role,
             json_encode($teamScopes),
-            json_encode($permissions)
+            json_encode($permissions),
+            $userId
         ]);
+        
+        // If no rows were updated, insert new record
+        if ($stmt->rowCount() === 0) {
+            $stmt = $db->prepare("
+                INSERT INTO user_security_contexts (
+                    user_id, profile_id, role, team_scopes, permissions, last_activity, expires_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '8 hours'
+                )
+            ");
+            
+            $stmt->execute([
+                $userId,
+                $profileId,
+                $role,
+                json_encode($teamScopes),
+                json_encode($permissions)
+            ]);
+        }
     }
     
     private function getDefaultPermissions(string $role): array
