@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout } from '../../store/slices/authSlice';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
