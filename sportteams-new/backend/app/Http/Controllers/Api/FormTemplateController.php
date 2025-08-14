@@ -104,7 +104,7 @@ class FormTemplateController extends Controller
     public function update(Request $request, FormTemplate $formTemplate): JsonResponse
     {
         // Only admins can update form templates
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
