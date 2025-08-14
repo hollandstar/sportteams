@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TeamAdminController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -20,6 +21,16 @@ Route::prefix('v1')->group(function () {
         // Authentication endpoints
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        
+        // Team Admin endpoints (require team_admin or admin role)
+        Route::prefix('team-admin')->group(function () {
+            Route::get('/teams', [TeamAdminController::class, 'getManagedTeams']);
+            Route::get('/teams/{teamId}/players', [TeamAdminController::class, 'getTeamPlayers']);
+            Route::post('/promote-to-player', [TeamAdminController::class, 'promoteToPlayer']);
+            Route::post('/players', [TeamAdminController::class, 'createPlayer']);
+            Route::put('/players/{playerId}', [TeamAdminController::class, 'updatePlayer']);
+            Route::get('/audit-log', [TeamAdminController::class, 'getAuditLog']);
+        });
         
         // Player management endpoints (will be implemented in next steps)
         // Route::get('/players', [PlayerController::class, 'index']);
