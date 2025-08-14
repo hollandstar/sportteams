@@ -1375,11 +1375,11 @@ class SportTeamsBackendTester:
 
     def test_forms_responses_submit(self) -> bool:
         """Test POST /api/v1/forms/responses endpoint"""
-        if not self.access_token:
+        if not self.ensure_valid_token():
             self.log_result(
                 "Forms Responses Submit Test",
                 False,
-                "No access token available - login test must pass first",
+                "No valid access token available - authentication failed",
                 {}
             )
             return False
