@@ -30,37 +30,8 @@ return new class extends Migration
             $table->index(['created_at'], 'idx_audit_timestamp');
         });
 
-        // Enable RLS on audit table
-        DB::statement("ALTER TABLE audit_role_changes ENABLE ROW LEVEL SECURITY;");
-
-        // RLS Policies for audit table
-        DB::statement("
-            CREATE POLICY \"Admins can view all audit logs\"
-            ON audit_role_changes
-            FOR SELECT
-            USING (is_admin());
-        ");
-
-        DB::statement("
-            CREATE POLICY \"Team admins can view audit logs for their teams\"
-            ON audit_role_changes
-            FOR SELECT
-            USING (is_team_admin() AND (
-                team_id IN (
-                    SELECT ta.team_id 
-                    FROM team_admins ta
-                    INNER JOIN profiles p ON p.id = ta.admin_profile_id
-                    WHERE p.user_id = auth.uid()
-                ) OR changed_by = auth.uid()
-            ));
-        ");
-
-        DB::statement("
-            CREATE POLICY \"Users can view their own role change history\"
-            ON audit_role_changes
-            FOR SELECT
-            USING (user_id = auth.uid());
-        ");
+        // Note: RLS is disabled for Laravel implementation
+        // Security is handled at the application level via Laravel's middleware and policies
     }
 
     /**
