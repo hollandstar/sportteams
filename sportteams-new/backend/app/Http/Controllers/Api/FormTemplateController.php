@@ -153,10 +153,10 @@ class FormTemplateController extends Controller
     /**
      * Remove the specified form template (Admin only)
      */
-    public function destroy(FormTemplate $formTemplate): JsonResponse
+    public function destroy(Request $request, FormTemplate $formTemplate): JsonResponse
     {
         // Only admins can delete form templates
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
