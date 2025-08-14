@@ -101,6 +101,60 @@ class ApiService {
   async logout(): Promise<any> {
     return this.post('/auth/logout');
   }
+
+  // Form Template methods
+  async getFormTemplates(): Promise<any> {
+    return this.get('/forms/templates');
+  }
+
+  async getActiveFormTemplates(): Promise<any> {
+    return this.get('/forms/active');
+  }
+
+  async getFormTemplate(id: string): Promise<any> {
+    return this.get(`/forms/templates/${id}`);
+  }
+
+  async createFormTemplate(data: any): Promise<any> {
+    return this.post('/forms/templates', data);
+  }
+
+  async updateFormTemplate(id: string, data: any): Promise<any> {
+    return this.put(`/forms/templates/${id}`, data);
+  }
+
+  async toggleFormTemplateStatus(id: string): Promise<any> {
+    return this.post(`/forms/templates/${id}/toggle-active`);
+  }
+
+  async deleteFormTemplate(id: string): Promise<any> {
+    return this.delete(`/forms/templates/${id}`);
+  }
+
+  async getFormStatistics(): Promise<any> {
+    return this.get('/forms/statistics');
+  }
+
+  // Form Response methods
+  async getFormResponses(params?: any): Promise<any> {
+    return this.get('/forms/responses', params);
+  }
+
+  async getFormResponse(id: string): Promise<any> {
+    return this.get(`/forms/responses/${id}`);
+  }
+
+  async submitFormResponse(data: any): Promise<any> {
+    return this.post('/forms/responses', data);
+  }
+
+  async updateFormResponse(id: string, data: any): Promise<any> {
+    return this.put(`/forms/responses/${id}`, data);
+  }
+
+  async deleteFormResponse(id: string): Promise<any> {
+    return this.delete(`/forms/responses/${id}`);
+  }
 }
 
 export const apiService = new ApiService();
