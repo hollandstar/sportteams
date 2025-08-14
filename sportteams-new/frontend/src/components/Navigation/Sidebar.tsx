@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/redux';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface SidebarProps {
   isOpen: boolean;
