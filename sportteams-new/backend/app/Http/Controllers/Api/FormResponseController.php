@@ -128,10 +128,10 @@ class FormResponseController extends Controller
     /**
      * Display the specified form response
      */
-    public function show(FormResponse $formResponse): JsonResponse
+    public function show(Request $request, FormResponse $formResponse): JsonResponse
     {
         // Check permissions
-        if (!$this->canViewResponse($formResponse)) {
+        if (!$this->canViewResponse($request, $formResponse)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
