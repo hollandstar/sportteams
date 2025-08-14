@@ -34,6 +34,26 @@ Route::prefix('v1')->group(function () {
             Route::get('/audit-log', [TeamAdminController::class, 'getAuditLog']);
         });
         
+        // Form Management endpoints
+        Route::prefix('forms')->group(function () {
+            // Admin-only form template management
+            Route::middleware(['role:admin'])->group(function () {
+                Route::get('/templates', [FormTemplateController::class, 'index']);
+                Route::post('/templates', [FormTemplateController::class, 'store']);
+                Route::put('/templates/{formTemplate}', [FormTemplateController::class, 'update']);
+                Route::post('/templates/{formTemplate}/toggle-active', [FormTemplateController::class, 'toggleActive']);
+                Route::delete('/templates/{formTemplate}', [FormTemplateController::class, 'destroy']);
+                Route::get('/statistics', [FormTemplateController::class, 'getStatistics']);
+            });
+            
+            // Form templates accessible by all authenticated users
+            Route::get('/templates/{formTemplate}', [FormTemplateController::class, 'show']);
+            Route::get('/active', [FormTemplateController::class, 'getActiveForms']);
+            
+            // Form responses
+            Route::apiResource('responses', FormResponseController::class);
+        });
+        
         // Player management endpoints (will be implemented in next steps)
         // Route::get('/players', [PlayerController::class, 'index']);
         // Route::get('/players/{id}', [PlayerController::class, 'show']);
