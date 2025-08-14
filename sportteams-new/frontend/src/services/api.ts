@@ -14,6 +14,7 @@ class ApiService {
     });
 
     this.setupInterceptors();
+    this.loadToken();
   }
 
   private setupInterceptors(): void {
@@ -34,7 +35,8 @@ class ApiService {
       (error: any) => {
         if (error.response?.status === 401) {
           this.clearToken();
-          // Could redirect to login here
+          // Could trigger token refresh here
+          window.dispatchEvent(new CustomEvent('auth:unauthorized'));
         }
         return Promise.reject(error);
       }
@@ -49,6 +51,7 @@ class ApiService {
   clearToken(): void {
     this.token = null;
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
   }
 
   loadToken(): void {
@@ -68,14 +71,35 @@ class ApiService {
     return response.data;
   }
 
-  // Test connection method
+  async put<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.put(url, data);
+    return response.data;
+  }
+
+  async delete<T>(url: string): Promise<T> {
+    const response = await this.client.delete(url);
+    return response.data;
+  }
+
+  // Authentication methods
   async testConnection(): Promise<any> {
     return this.get('/test');
   }
 
-  // Login method
   async login(credentials: { email: string; password: string }): Promise<any> {
     return this.post('/auth/login', credentials);
+  }
+
+  async refreshToken(refreshToken: string): Promise<any> {
+    return this.post('/auth/refresh', { refresh_token: refreshToken });
+  }
+
+  async getCurrentUser(): Promise<any> {
+    return this.get('/auth/me');
+  }
+
+  async logout(): Promise<any> {
+    return this.post('/auth/logout');
   }
 }
 
