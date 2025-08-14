@@ -12,14 +12,14 @@ return new class extends Migration
     {
         // Create helper function to check if user is team admin
         DB::statement("
-            CREATE OR REPLACE FUNCTION is_team_admin(user_uuid UUID DEFAULT auth.uid())
+            CREATE OR REPLACE FUNCTION is_team_admin(user_uuid TEXT)
             RETURNS BOOLEAN AS $$
             BEGIN
                 RETURN EXISTS (
                     SELECT 1 
                     FROM profiles p
                     INNER JOIN team_admins ta ON p.id = ta.admin_profile_id
-                    WHERE p.user_id = user_uuid::text
+                    WHERE p.user_id = user_uuid
                     AND p.role = 'team_admin'
                 );
             END;
@@ -28,14 +28,14 @@ return new class extends Migration
 
         // Create helper function to check if user is team admin for specific team
         DB::statement("
-            CREATE OR REPLACE FUNCTION is_team_admin_for_team(team_int_id INTEGER, user_uuid UUID DEFAULT auth.uid())
+            CREATE OR REPLACE FUNCTION is_team_admin_for_team(team_int_id INTEGER, user_uuid TEXT)
             RETURNS BOOLEAN AS $$
             BEGIN
                 RETURN EXISTS (
                     SELECT 1 
                     FROM profiles p
                     INNER JOIN team_admins ta ON p.id = ta.admin_profile_id
-                    WHERE p.user_id = user_uuid::text
+                    WHERE p.user_id = user_uuid
                     AND p.role = 'team_admin'
                     AND ta.team_id = team_int_id
                 );
@@ -45,7 +45,7 @@ return new class extends Migration
 
         -- Create secure function to promote general user to player
         DB::statement("
-            CREATE OR REPLACE FUNCTION promote_general_to_player(profile_int_id INTEGER, team_int_id INTEGER, admin_user_uuid UUID DEFAULT auth.uid())
+            CREATE OR REPLACE FUNCTION promote_general_to_player(profile_int_id INTEGER, team_int_id INTEGER, admin_user_uuid TEXT)
             RETURNS JSON AS $$
             DECLARE
                 target_profile RECORD;
@@ -96,7 +96,7 @@ return new class extends Migration
                     profile_int_id,
                     'general',
                     'player',
-                    admin_user_uuid::text,
+                    admin_user_uuid,
                     team_int_id,
                     NOW()
                 );
