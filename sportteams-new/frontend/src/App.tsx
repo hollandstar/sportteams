@@ -1,208 +1,128 @@
-import { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
-import { loginUser, getCurrentUser, logout, loadStoredAuth } from './store/slices/authSlice'
-import { apiService } from './services/api'
+import { loadStoredAuth, getCurrentUser } from './store/slices/authSlice'
+
+// Route Components
+import ProtectedRoute from './components/Router/ProtectedRoute'
+import PublicRoute from './components/Router/PublicRoute'
+
+// Pages
+import HomePage from './pages/HomePage'
+import DashboardPage from './pages/DashboardPage'
+import UnauthorizedPage from './pages/UnauthorizedPage'
+import NotFoundPage from './pages/NotFoundPage'
+
+// CSS
 import './App.css'
 
 function App() {
   const dispatch = useAppDispatch()
-  const { user, isAuthenticated, loading, error } = useAppSelector((state) => state.auth)
-  
-  const [connectionStatus, setConnectionStatus] = useState<string>('Testing...')
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
+  const { isAuthenticated, loading } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
-    // Load stored authentication and test API connection
+    // Load stored authentication on app start
     dispatch(loadStoredAuth())
-    testApiConnection()
     
-    // If we have stored auth, try to get current user
+    // If we have stored auth, try to get current user details
     const token = localStorage.getItem('auth_token')
-    if (token && !user) {
+    if (token) {
       dispatch(getCurrentUser())
     }
-  }, [dispatch, user])
+  }, [dispatch])
 
-  const testApiConnection = async () => {
-    try {
-      const response = await apiService.testConnection()
-      if (response.data?.security_enhanced) {
-        setConnectionStatus(`✅ Connected (Enhanced Security) - ${response.data.tables_count} tables`)
-      } else {
-        setConnectionStatus(`✅ Connected - ${response.data.tables_count} tables`)
-      }
-    } catch (error) {
-      setConnectionStatus('❌ Connection failed')
-      console.error('API connection failed:', error)
-    }
-  }
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    try {
-      await dispatch(loginUser(loginData)).unwrap()
-      setConnectionStatus('✅ Logged in successfully!')
-    } catch (error) {
-      console.error('Login failed:', error)
-      setConnectionStatus('❌ Login failed: ' + error)
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await dispatch(logout()).unwrap()
-      setConnectionStatus('✅ Logged out successfully')
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">SportTeams wordt geladen...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="App">
-      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        <h1>🏒 SportTeams - Phase 2: Enhanced Security</h1>
-        
-        <div style={{ 
-          padding: '15px', 
-          margin: '20px 0', 
-          backgroundColor: '#f5f5f5', 
-          borderRadius: '8px' 
-        }}>
-          <h3>API Connection Status:</h3>
-          <p>{connectionStatus}</p>
-        </div>
+    <Router>
+      <div className="App min-h-screen">
+        <Routes>
+          {/* Public Routes */}
+          <Route 
+            path="/" 
+            element={
+              <PublicRoute>
+                <HomePage />
+              </PublicRoute>
+            } 
+          />
 
-        {error && (
-          <div style={{ 
-            padding: '15px', 
-            margin: '20px 0', 
-            backgroundColor: '#ffebee', 
-            borderRadius: '8px',
-            color: '#c62828'
-          }}>
-            <h3>❌ Error:</h3>
-            <p>{error}</p>
-          </div>
-        )}
+          {/* Protected Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
 
-        {!isAuthenticated ? (
-          <form onSubmit={handleLogin} style={{ marginTop: '20px' }}>
-            <h3>Enhanced JWT Login</h3>
-            <div style={{ marginBottom: '10px' }}>
-              <input
-                type="email"
-                placeholder="Email (try: admin@sportteams.nl)"
-                value={loginData.email}
-                onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '10px', 
-                  marginBottom: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd'
-                }}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Password (try: admin123)"
-                value={loginData.password}
-                onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '10px', 
-                  marginBottom: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd'
-                }}
-                required
-              />
-              <button 
-                type="submit" 
-                disabled={loading}
-                style={{ 
-                  width: '100%', 
-                  padding: '12px', 
-                  backgroundColor: loading ? '#ccc' : '#4CAF50', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '4px',
-                  cursor: loading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {loading ? 'Logging in...' : 'Login with Enhanced Security'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div style={{ 
-            padding: '15px', 
-            margin: '20px 0', 
-            backgroundColor: '#e8f5e8', 
-            borderRadius: '8px' 
-          }}>
-            <h3>✅ Authenticated User:</h3>
-            <div style={{ textAlign: 'left' }}>
-              <p><strong>Name:</strong> {user?.name}</p>
-              <p><strong>Email:</strong> {user?.email}</p>
-              <p><strong>Role:</strong> {user?.role}</p>
-              <p><strong>Profile ID:</strong> {user?.profile_id}</p>
-              <p><strong>Team Scopes:</strong> {user?.team_scopes?.length ? user.team_scopes.join(', ') : 'Admin (All Teams)'}</p>
-              <p><strong>Language:</strong> {user?.preferred_language || 'nl'}</p>
-              {user?.last_login_at && <p><strong>Last Login:</strong> {new Date(user.last_login_at).toLocaleString()}</p>}
-              
-              <details style={{ marginTop: '10px' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>🔐 Permissions</summary>
-                <div style={{ marginTop: '5px', fontSize: '12px', backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '4px' }}>
-                  {user?.permissions && Object.entries(user.permissions).map(([key, value]) => (
-                    <div key={key} style={{ marginBottom: '2px' }}>
-                      <span style={{ color: value ? 'green' : 'red' }}>
-                        {value ? '✅' : '❌'}
-                      </span> {key.replace(/_/g, ' ')}
-                    </div>
-                  ))}
-                </div>
-              </details>
-            </div>
-            
-            <button 
-              onClick={handleLogout}
-              style={{ 
-                marginTop: '15px',
-                padding: '8px 16px', 
-                backgroundColor: '#f44336', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Secure Logout
-            </button>
-          </div>
-        )}
+          {/* Admin-only Routes */}
+          <Route 
+            path="/admin/*" 
+            element={
+              <ProtectedRoute requiredRoles={['admin']}>
+                <div>Admin Panel - Coming Soon</div>
+              </ProtectedRoute>
+            } 
+          />
 
-        <div style={{ 
-          marginTop: '30px', 
-          padding: '15px', 
-          backgroundColor: '#e3f2fd', 
-          borderRadius: '8px' 
-        }}>
-          <h4>✅ Phase 2: Enhanced Security Complete!</h4>
-          <ul style={{ textAlign: 'left' }}>
-            <li>✅ <strong>Encrypted JWT</strong> with JWE (JSON Web Encryption)</li>
-            <li>✅ <strong>Token Rotation</strong> with secure refresh tokens</li>
-            <li>✅ <strong>Team-scoped Access</strong> replacing insecure RLS</li>
-            <li>✅ <strong>Rate Limiting</strong> and security monitoring</li>
-            <li>✅ <strong>Redux State Management</strong> for frontend</li>
-            <li>✅ <strong>Enhanced Permissions</strong> with role-based access</li>
-            <li>✅ <strong>Security Logging</strong> and audit trails</li>
-          </ul>
-          <p><small>🚀 Ready for Phase 3: Player Management System!</small></p>
-        </div>
+          {/* Team Admin Routes */}
+          <Route 
+            path="/team-admin/*" 
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'team_admin']}>
+                <div>Team Admin Panel - Coming Soon</div>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Coach Routes */}
+          <Route 
+            path="/coach/*" 
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'team_admin', 'coach']}>
+                <div>Coach Panel - Coming Soon</div>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Player Routes */}
+          <Route 
+            path="/player/*" 
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'team_admin', 'coach', 'player']}>
+                <div>Player Panel - Coming Soon</div>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Error Routes */}
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/404" element={<NotFoundPage />} />
+          
+          {/* Redirect authenticated users from unknown routes */}
+          <Route 
+            path="*" 
+            element={
+              isAuthenticated ? 
+                <Navigate to="/dashboard" replace /> : 
+                <NotFoundPage />
+            } 
+          />
+        </Routes>
       </div>
-    </div>
+    </Router>
   )
 }
 
