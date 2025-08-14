@@ -101,7 +101,7 @@ class FormResponseController extends Controller
                 'player_id' => $request->player_id,
                 'team_id' => $request->team_id,
                 'responses' => $request->responses,
-                'submitted_by' => Auth::id(),
+                'submitted_by' => $request->get('user_id'),
                 'submitted_at' => now(),
             ]);
 
