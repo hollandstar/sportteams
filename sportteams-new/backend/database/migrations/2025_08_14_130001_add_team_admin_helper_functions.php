@@ -43,7 +43,7 @@ return new class extends Migration
             $$ LANGUAGE plpgsql SECURITY DEFINER;
         ");
 
-        -- Create secure function to promote general user to player
+        // Create secure function to promote general user to player
         DB::statement("
             CREATE OR REPLACE FUNCTION promote_general_to_player(profile_int_id INTEGER, team_int_id INTEGER, admin_user_uuid TEXT)
             RETURNS JSON AS $$
