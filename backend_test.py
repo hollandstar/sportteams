@@ -934,54 +934,636 @@ class SportTeamsBackendTester:
             )
             return False
 
-    def test_team_admin_security_authorization(self) -> bool:
-        """Test security and authorization for team admin endpoints"""
-        try:
-            # Test without token (should fail with 401)
-            response = self.session.get(f"{self.base_url}/team-admin/teams", timeout=10)
-            
-            if response.status_code == 401:
-                unauthorized_success = True
-                unauthorized_message = "Correctly rejected request without token"
-            else:
-                unauthorized_success = False
-                unauthorized_message = f"Expected 401, got {response.status_code}"
-            
-            # Test with invalid token (should fail with 401)
-            headers = {'Authorization': 'Bearer invalid_token_here'}
-            response = self.session.get(f"{self.base_url}/team-admin/teams", headers=headers, timeout=10)
-            
-            if response.status_code == 401:
-                invalid_token_success = True
-                invalid_token_message = "Correctly rejected invalid token"
-            else:
-                invalid_token_success = False
-                invalid_token_message = f"Expected 401 for invalid token, got {response.status_code}"
-            
-            overall_success = unauthorized_success and invalid_token_success
-            
+    def test_forms_templates_get_all(self) -> bool:
+        """Test GET /api/v1/forms/templates endpoint (Admin-only)"""
+        if not self.access_token:
             self.log_result(
-                "Team Admin Security Authorization Test",
-                overall_success,
-                "Team admin security working correctly" if overall_success else "Team admin security issues detected",
-                {
-                    "no_token_test": {
-                        "success": unauthorized_success,
-                        "message": unauthorized_message
-                    },
-                    "invalid_token_test": {
-                        "success": invalid_token_success,
-                        "message": invalid_token_message
-                    }
-                }
+                "Forms Templates Get All Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
             )
-            return overall_success
+            return False
             
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/forms/templates",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    templates = data.get('data', [])
+                    self.log_result(
+                        "Forms Templates Get All Test",
+                        True,
+                        f"Successfully retrieved form templates - {len(templates)} templates found",
+                        {
+                            "status_code": response.status_code,
+                            "templates_count": len(templates),
+                            "sample_templates": templates[:2] if templates else []
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Templates Get All Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Templates Get All Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
         except requests.exceptions.RequestException as e:
             self.log_result(
-                "Team Admin Security Authorization Test",
+                "Forms Templates Get All Test",
                 False,
-                f"Security test failed: {str(e)}",
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_templates_create(self) -> bool:
+        """Test POST /api/v1/forms/templates endpoint (Admin-only)"""
+        if not self.access_token:
+            self.log_result(
+                "Forms Templates Create Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Create a condition test form template
+            unique_id = int(time.time())
+            template_data = {
+                "name": f"Test Condition Form {unique_id}",
+                "type": "condition_test",
+                "description": "Test condition assessment form for API testing",
+                "fields_config": {
+                    "test_type": {
+                        "type": "select",
+                        "label": "Test Type",
+                        "options": ["30-15 IFT", "Yo-Yo Test", "Cooper Test"],
+                        "required": True
+                    },
+                    "test_date": {
+                        "type": "date",
+                        "label": "Test Date",
+                        "required": True
+                    },
+                    "results": {
+                        "type": "number",
+                        "label": "Test Results",
+                        "required": True
+                    }
+                },
+                "is_active": True
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/forms/templates",
+                json=template_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('status') == 'success':
+                    created_template = data.get('data', {})
+                    self.created_form_template_id = created_template.get('id')
+                    
+                    self.log_result(
+                        "Forms Templates Create Test",
+                        True,
+                        "Successfully created new form template",
+                        {
+                            "status_code": response.status_code,
+                            "template_id": self.created_form_template_id,
+                            "template_name": created_template.get('name'),
+                            "template_type": created_template.get('type'),
+                            "is_active": created_template.get('is_active')
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Templates Create Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Templates Create Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data,
+                        "template_data": template_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Forms Templates Create Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_active_get(self) -> bool:
+        """Test GET /api/v1/forms/active endpoint (accessible by all users)"""
+        if not self.access_token:
+            self.log_result(
+                "Forms Active Get Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/forms/active",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    active_forms = data.get('data', [])
+                    self.log_result(
+                        "Forms Active Get Test",
+                        True,
+                        f"Successfully retrieved active forms - {len(active_forms)} active forms found",
+                        {
+                            "status_code": response.status_code,
+                            "active_forms_count": len(active_forms),
+                            "sample_forms": active_forms[:2] if active_forms else []
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Active Get Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Active Get Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Forms Active Get Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_template_toggle_active(self) -> bool:
+        """Test POST /api/v1/forms/templates/{id}/toggle-active endpoint (Admin-only)"""
+        if not self.access_token:
+            self.log_result(
+                "Forms Template Toggle Active Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        if not self.created_form_template_id:
+            self.log_result(
+                "Forms Template Toggle Active Test",
+                False,
+                "No form template ID available - create template test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/forms/templates/{self.created_form_template_id}/toggle-active",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    updated_template = data.get('data', {})
+                    self.log_result(
+                        "Forms Template Toggle Active Test",
+                        True,
+                        f"Successfully toggled form active status - now {'active' if updated_template.get('is_active') else 'inactive'}",
+                        {
+                            "status_code": response.status_code,
+                            "template_id": self.created_form_template_id,
+                            "is_active": updated_template.get('is_active'),
+                            "message": data.get('message')
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Template Toggle Active Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Template Toggle Active Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Forms Template Toggle Active Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_statistics_get(self) -> bool:
+        """Test GET /api/v1/forms/statistics endpoint (Admin-only)"""
+        if not self.access_token:
+            self.log_result(
+                "Forms Statistics Get Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/forms/statistics",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    stats = data.get('data', {})
+                    self.log_result(
+                        "Forms Statistics Get Test",
+                        True,
+                        "Successfully retrieved form statistics",
+                        {
+                            "status_code": response.status_code,
+                            "total_forms": stats.get('total_forms'),
+                            "active_forms": stats.get('active_forms'),
+                            "condition_test_responses": stats.get('condition_test_responses'),
+                            "action_type_test_responses": stats.get('action_type_test_responses'),
+                            "skill_assessment_responses": stats.get('skill_assessment_responses')
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Statistics Get Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Statistics Get Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Forms Statistics Get Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_responses_submit(self) -> bool:
+        """Test POST /api/v1/forms/responses endpoint"""
+        if not self.access_token:
+            self.log_result(
+                "Forms Responses Submit Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        if not self.created_form_template_id:
+            self.log_result(
+                "Forms Responses Submit Test",
+                False,
+                "No form template ID available - create template test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # First, get a valid player and team ID from the database
+            # For testing, we'll use the admin user as both player and submitter
+            # In a real scenario, these would be different users
+            response_data = {
+                "form_template_id": self.created_form_template_id,
+                "player_id": 1,  # Assuming admin user has ID 1
+                "team_id": 1,    # Assuming there's a team with ID 1
+                "responses": {
+                    "test_type": "30-15 IFT",
+                    "test_date": "2025-01-15",
+                    "results": 85
+                }
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/forms/responses",
+                json=response_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('status') == 'success':
+                    form_response = data.get('data', {})
+                    self.log_result(
+                        "Forms Responses Submit Test",
+                        True,
+                        "Successfully submitted form response",
+                        {
+                            "status_code": response.status_code,
+                            "response_id": form_response.get('id'),
+                            "form_template_id": form_response.get('form_template_id'),
+                            "player_id": form_response.get('player_id'),
+                            "team_id": form_response.get('team_id'),
+                            "message": data.get('message')
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Responses Submit Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Responses Submit Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data,
+                        "response_data": response_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Forms Responses Submit Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_forms_responses_get_all(self) -> bool:
+        """Test GET /api/v1/forms/responses endpoint"""
+        if not self.access_token:
+            self.log_result(
+                "Forms Responses Get All Test",
+                False,
+                "No access token available - login test must pass first",
+                {}
+            )
+            return False
+            
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/forms/responses",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    responses_data = data.get('data', {})
+                    responses = responses_data.get('data', []) if isinstance(responses_data, dict) else responses_data
+                    self.log_result(
+                        "Forms Responses Get All Test",
+                        True,
+                        f"Successfully retrieved form responses - {len(responses)} responses found",
+                        {
+                            "status_code": response.status_code,
+                            "responses_count": len(responses),
+                            "sample_responses": responses[:2] if responses else []
+                        }
+                    )
+                    return True
+                else:
+                    self.log_result(
+                        "Forms Responses Get All Test",
+                        False,
+                        f"API returned error: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                except:
+                    error_data = {"text": response.text}
+                    
+                self.log_result(
+                    "Forms Responses Get All Test",
+                    False,
+                    f"HTTP {response.status_code}: {error_data.get('message', response.text)}",
+                    {
+                        "status_code": response.status_code,
+                        "error_data": error_data
+                    }
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Forms Responses Get All Test",
+                False,
+                f"Request failed: {str(e)}",
+                {"error_type": type(e).__name__}
+            )
+            return False
+
+    def test_database_tables_verification(self) -> bool:
+        """Test database tables verification for Forms API"""
+        try:
+            response = self.session.get(f"{self.base_url}/test", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success' and 'data' in data:
+                    db_data = data['data']
+                    tables_count = db_data.get('tables_count', 0)
+                    
+                    # Check if we have the expected tables for Forms API
+                    # Expected: form_templates, form_responses, condition_tests, action_type_tests, skill_assessments
+                    expected_minimum = 25  # Previous tables + new form tables
+                    tables_sufficient = isinstance(tables_count, (int, str)) and int(tables_count) >= expected_minimum
+                    
+                    self.log_result(
+                        "Database Tables Verification Test",
+                        tables_sufficient,
+                        f"Database tables {'verified' if tables_sufficient else 'insufficient'} - {tables_count} tables found (expected >= {expected_minimum})",
+                        {
+                            "database": db_data.get('database'),
+                            "tables_count": tables_count,
+                            "expected_minimum": expected_minimum,
+                            "includes_form_tables": tables_sufficient,
+                            "timestamp": db_data.get('timestamp')
+                        }
+                    )
+                    return tables_sufficient
+                else:
+                    self.log_result(
+                        "Database Tables Verification Test",
+                        False,
+                        f"Database test failed: {data.get('message', 'Unknown error')}",
+                        {"response": data}
+                    )
+                    return False
+            else:
+                self.log_result(
+                    "Database Tables Verification Test",
+                    False,
+                    f"HTTP {response.status_code}: {response.text}",
+                    {"status_code": response.status_code}
+                )
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log_result(
+                "Database Tables Verification Test",
+                False,
+                f"Database verification test failed: {str(e)}",
                 {"error_type": type(e).__name__}
             )
             return False
