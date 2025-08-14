@@ -14,10 +14,10 @@ class FormTemplateController extends Controller
     /**
      * Display a listing of form templates (Admin only)
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         // Only admins can view all form templates
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
