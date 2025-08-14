@@ -208,10 +208,10 @@ class FormResponseController extends Controller
     /**
      * Remove the specified form response
      */
-    public function destroy(FormResponse $formResponse): JsonResponse
+    public function destroy(Request $request, FormResponse $formResponse): JsonResponse
     {
         // Only admin can delete form responses
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
