@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 # Laravel backend URL
-LARAVEL_BACKEND_URL = "http://localhost:8001"
+LARAVEL_BACKEND_URL = "http://localhost:8002"
 
 @app.middleware("http")
 async def proxy_requests(request: Request, call_next):
