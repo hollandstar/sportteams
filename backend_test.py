@@ -1569,12 +1569,12 @@ class SportTeamsBackendTester:
             return False
 
     def run_all_tests(self) -> Dict[str, Any]:
-        """Run all backend tests"""
-        print("🚀 Starting SportTeams Laravel Backend API Tests with Team Admin Features")
+        """Run all backend tests for Forms API system"""
+        print("🚀 Starting SportTeams Laravel Backend API Tests - Forms API System")
         print(f"🔗 Testing API at: {self.base_url}")
         print("=" * 60)
         
-        # Test sequence
+        # Test sequence for Forms API
         tests = [
             ("Basic Connection", self.test_basic_connection),
             ("Database Connection", self.test_database_connection),
@@ -1583,12 +1583,14 @@ class SportTeamsBackendTester:
             ("JWT Token Validation", self.test_jwt_token_validation),
             ("Security Middleware", self.test_security_middleware),
             ("Token Refresh", self.test_token_refresh),
-            ("Team Admin Database Schema", self.test_team_admin_database_schema),
-            ("Team Admin Get Managed Teams", self.test_team_admin_get_managed_teams),
-            ("Team Admin Get Team Players", self.test_team_admin_get_team_players),
-            ("Team Admin Create Player", self.test_team_admin_create_player),
-            ("Team Admin Audit Log", self.test_team_admin_audit_log),
-            ("Team Admin Security Authorization", self.test_team_admin_security_authorization),
+            ("Database Tables Verification", self.test_database_tables_verification),
+            ("Forms Templates Get All", self.test_forms_templates_get_all),
+            ("Forms Templates Create", self.test_forms_templates_create),
+            ("Forms Active Get", self.test_forms_active_get),
+            ("Forms Template Toggle Active", self.test_forms_template_toggle_active),
+            ("Forms Statistics Get", self.test_forms_statistics_get),
+            ("Forms Responses Submit", self.test_forms_responses_submit),
+            ("Forms Responses Get All", self.test_forms_responses_get_all),
             ("Logout Functionality", self.test_logout_functionality),
         ]
         
@@ -1612,7 +1614,7 @@ class SportTeamsBackendTester:
         
         # Summary
         print("=" * 60)
-        print(f"📊 TEST SUMMARY")
+        print(f"📊 FORMS API TEST SUMMARY")
         print(f"✅ Passed: {passed}")
         print(f"❌ Failed: {failed}")
         print(f"📈 Success Rate: {(passed/(passed+failed)*100):.1f}%")
