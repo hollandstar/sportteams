@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h1 className="text-xl font-bold text-gray-900">SportTeams</h1>
+                <h1 className="text-xl font-bold text-gray-900">{t('nav.logo')}</h1>
               </div>
             </div>
           </div>
