@@ -28,36 +28,36 @@ return new class extends Migration
 
         // Create helper function to check if user is team admin for specific team
         DB::statement("
-            CREATE OR REPLACE FUNCTION is_team_admin_for_team(team_uuid UUID, user_uuid UUID DEFAULT auth.uid())
+            CREATE OR REPLACE FUNCTION is_team_admin_for_team(team_int_id INTEGER, user_uuid UUID DEFAULT auth.uid())
             RETURNS BOOLEAN AS $$
             BEGIN
                 RETURN EXISTS (
                     SELECT 1 
                     FROM profiles p
                     INNER JOIN team_admins ta ON p.id = ta.admin_profile_id
-                    WHERE p.user_id = user_uuid
+                    WHERE p.user_id = user_uuid::text
                     AND p.role = 'team_admin'
-                    AND ta.team_id = team_uuid
+                    AND ta.team_id = team_int_id
                 );
             END;
             $$ LANGUAGE plpgsql SECURITY DEFINER;
         ");
 
-        // Create secure function to promote general user to player
+        -- Create secure function to promote general user to player
         DB::statement("
-            CREATE OR REPLACE FUNCTION promote_general_to_player(profile_uuid UUID, team_uuid UUID, admin_user_uuid UUID DEFAULT auth.uid())
+            CREATE OR REPLACE FUNCTION promote_general_to_player(profile_int_id INTEGER, team_int_id INTEGER, admin_user_uuid UUID DEFAULT auth.uid())
             RETURNS JSON AS $$
             DECLARE
                 target_profile RECORD;
                 result JSON;
             BEGIN
                 -- Verify admin is team admin for this team
-                IF NOT is_team_admin_for_team(team_uuid, admin_user_uuid) AND NOT is_admin(admin_user_uuid) THEN
+                IF NOT is_team_admin_for_team(team_int_id, admin_user_uuid) AND NOT is_admin(admin_user_uuid) THEN
                     RETURN json_build_object('success', false, 'error', 'Insufficient permissions');
                 END IF;
 
                 -- Get target profile
-                SELECT * INTO target_profile FROM profiles WHERE id = profile_uuid;
+                SELECT * INTO target_profile FROM profiles WHERE id = profile_int_id;
                 
                 IF NOT FOUND THEN
                     RETURN json_build_object('success', false, 'error', 'Profile not found');
@@ -71,14 +71,13 @@ return new class extends Migration
                 -- Update profile role to player
                 UPDATE profiles 
                 SET role = 'player', updated_at = NOW()
-                WHERE id = profile_uuid;
+                WHERE id = profile_int_id;
 
                 -- Insert or update player record
-                INSERT INTO players (id, profile_id, team_id, name, email, created_at, updated_at)
+                INSERT INTO players (profile_id, team_id, name, email, created_at, updated_at)
                 VALUES (
-                    gen_random_uuid(),
-                    profile_uuid,
-                    team_uuid,
+                    profile_int_id,
+                    team_int_id,
                     target_profile.name,
                     target_profile.email,
                     NOW(),
@@ -86,28 +85,27 @@ return new class extends Migration
                 )
                 ON CONFLICT (profile_id) 
                 DO UPDATE SET 
-                    team_id = team_uuid,
+                    team_id = team_int_id,
                     updated_at = NOW();
 
                 -- Log the action
                 INSERT INTO audit_role_changes (
-                    id, user_id, profile_id, old_role, new_role, changed_by, team_id, created_at
+                    user_id, profile_id, old_role, new_role, changed_by, team_id, created_at
                 ) VALUES (
-                    gen_random_uuid(),
                     target_profile.user_id,
-                    profile_uuid,
+                    profile_int_id,
                     'general',
                     'player',
-                    admin_user_uuid,
-                    team_uuid,
+                    admin_user_uuid::text,
+                    team_int_id,
                     NOW()
                 );
 
                 RETURN json_build_object(
                     'success', true, 
                     'message', 'Successfully promoted user to player',
-                    'profile_id', profile_uuid,
-                    'team_id', team_uuid
+                    'profile_id', profile_int_id,
+                    'team_id', team_int_id
                 );
             END;
             $$ LANGUAGE plpgsql SECURITY DEFINER;
