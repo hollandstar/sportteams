@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
+import type { AxiosInstance } from 'axios';
 
 class ApiService {
   private client: AxiosInstance;
