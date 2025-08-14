@@ -48,7 +48,7 @@ class FormTemplateController extends Controller
     public function store(Request $request): JsonResponse
     {
         // Only admins can create form templates
-        if (Auth::user()->role !== 'admin') {
+        if ($request->get('user_role') !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -73,7 +73,7 @@ class FormTemplateController extends Controller
             'description' => $request->description,
             'fields_config' => $request->fields_config,
             'is_active' => $request->is_active ?? false,
-            'created_by' => Auth::id(),
+            'created_by' => $request->get('user_id'),
         ]);
 
         return response()->json([
